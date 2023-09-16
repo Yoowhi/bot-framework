@@ -1,4 +1,4 @@
-import strings from "../strings.json";
+import strings from "../strings";
 
 type TextKey = typeof strings
 

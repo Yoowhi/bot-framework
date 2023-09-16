@@ -14,11 +14,4 @@ export class StartState extends State {
             }
         }
     }
-
-    public async button(message: CallbackQuery) {
-        switch (message.data) {
-            default:
-                return this.noAction();
-        }
-    }
 }

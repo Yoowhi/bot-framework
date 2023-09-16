@@ -5,7 +5,7 @@ import { DEBUG, ERROR, INFO, WARN } from "./logger";
 import { Conversation } from "./conversation";
 import { User, initUser } from "../models/db/user";
 
-type CommandCallback = (user: User) => Reply | Promise<Reply> | undefined;
+type CommandCallback = (user: User) => Reply | Promise<Reply> | void;
 type Commands = { "/start": (typeof State) | CommandCallback, [key: string]: (typeof State) | CommandCallback };
 
 
@@ -32,15 +32,21 @@ export function initBot(commands: Commands, beforeCommand?: (user: User) => Prom
     listen();
 }
 
-export async function sendToChat(chatId: number, reply: Reply) {
+export async function sendToChat(chatId: number, reply: Reply | string) {
     let options: SendMessageOptions = {parse_mode: "Markdown"};
-    if (reply.buttons) {
-        options.reply_markup = {
-            inline_keyboard: reply.buttons
+    let text: string;
+    if (instanceOfReply(reply)) {
+        text = reply.text ?? "";
+        if (reply.buttons) {
+            options.reply_markup = {
+                inline_keyboard: reply.buttons
+            }
         }
+    } else {
+        text = reply
     }
     try {
-        return await bot.sendMessage(chatId, reply.text ?? "", options);
+        return await bot.sendMessage(chatId, text, options);
     } catch (error) {
         ERROR("Message send error", {chatId, reply, error});
     }

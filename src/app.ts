@@ -1,40 +1,21 @@
-import TelegramBot, { SendMessageOptions } from "node-telegram-bot-api";
+import { initBot, sendToChat } from "./components/bot";
+import { initDB } from "./components/db";
 import config from "./config.json";
-import { Reply } from "./components/state/reply";
-import { DEBUG, ERROR, INFO } from "./components/logger";
+import { StartState } from "./models/states/start-state";
 
-const bot = new TelegramBot(config.bot.token, {polling: true});
+initDB(config.db);
 
-export async function answer(chatId: number, reply: Reply | undefined) {
-    if (!reply) {
-        return;
-    }
-    let options: SendMessageOptions = {parse_mode: "Markdown"};
-    if (reply.buttons) {
-        options.reply_markup = {
-            inline_keyboard: reply.buttons
+initBot({
+    "/start": (user) => {
+        return {
+            text: "Привет пошел нахуй",
+            buttons: [
+                [{text: "Пойти нахуй", callback_data: "hui"}]
+            ]
         }
+    },
+    "/exampleStateClass": StartState,
+    "/exampleNoReturn": (user) => {
+        return undefined;
     }
-    try {
-        return bot.sendMessage(chatId, reply.text ?? "", options);
-    } catch (error) {
-        ERROR("Message send error", {chatId, reply, error});
-    }
-}
-
-async function start() {
-    INFO("Telegram callback initializing...");
-    bot.on("text", async msg => {
-        DEBUG("New message from " + msg.from?.id)
-        
-    });
-    bot.on("callback_query", async msg => {
-        if (!msg.message) {
-            return;
-        }
-    })
-    INFO("Telegram callback initialized");
-    INFO("Service ready");
-}
-
-start();
+});

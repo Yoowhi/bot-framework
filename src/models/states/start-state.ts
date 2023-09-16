@@ -1,5 +1,5 @@
 import { CallbackQuery } from "node-telegram-bot-api";
-import { State } from "../../components/state/state";
+import { State } from "../../components/state";
 import { t } from "../../components/text";
 import { INFO } from "../../components/logger";
 

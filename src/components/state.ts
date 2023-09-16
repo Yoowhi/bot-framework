@@ -1,8 +1,26 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
-import { StateResult } from "./state-result";
-import { User } from "../../models/db/user";
+import { User } from "../models/db/user";
 
-export abstract class State {
+interface StateResult {
+    state: State;
+    reply?: Reply;
+}
+
+interface Button {
+    text: string,
+    callback_data: string
+}
+
+export interface Reply {
+    text?: string;
+    buttons?: ButtonColumn[]
+}
+
+type ButtonColumn = Button[];
+
+
+
+export class State {
     public user: User;
 
     constructor(user: User) {

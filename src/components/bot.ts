@@ -24,11 +24,11 @@ export function initBot(commands: Commands, beforeCommand?: (user: User) => Prom
     for (const command in commands) {
         if (Object.prototype.hasOwnProperty.call(commands, command)) {
             const stateClass = commands[command];
-            commsList.push({command, description: ""});
+            commsList.push({command, description: `command`});
             commandMap.set(command, stateClass);
         }
     }
-    bot.setMyCommands(commsList);
+    //bot.setMyCommands(commsList);
     listen();
 }
 
@@ -70,19 +70,22 @@ async function listen() {
             const [command, ...args] = msg.text.split(" ");
             const state = commandMap.get(command);
             if (state) {
-                if (state instanceof State) {
+                if (state.prototype instanceof State) {
                     const conversation = getConversation(user, true, state as typeof State);
-                    const reply = await conversation.inputText(msg);
+                    const reply = (await conversation.state.enter()).reply;
                     if (reply) {
                         await sendToChat(chatId, reply);
+                        return;
                     }
                 } else if (typeof state === "function") {
                     const result = (state as CommandCallback)(user);
                     if (result instanceof Promise) {
                         const reply = await result;
                         await sendToChat(chatId, reply);
+                        return;
                     } else if (instanceOfReply(result)) {
                         await sendToChat(chatId, result);
+                        return;
                     }
                 }
                 return;

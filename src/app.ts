@@ -1,4 +1,4 @@
-import { initBot } from "./components/bot";
+import { initBot, sendToChat } from "./components/bot";
 import { initDB } from "./components/db";
 import config from "./config.json";
 import { StartState } from "./models/states/start-state";
@@ -8,12 +8,12 @@ initDB(config.db);
 initBot({
     // This command uses async callback with Reply return type
     "/exampleCallback": async (user) => {
-        return {
+        await sendToChat(user.chatId, {
             text: "This is callback example",
             buttons: [
                 [{text: "Example button", callback_data: "_"}]
             ]
-        }
+        });
     },
     // This command uses State child class
     "/start": StartState, 

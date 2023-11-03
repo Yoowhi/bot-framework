@@ -1,10 +1,6 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
 import { User } from "../models/db/user";
-
-interface StateResult {
-    state: State;
-    reply?: Reply;
-}
+import { sendToChat } from "./bot";
 
 interface Button {
     text: string,
@@ -28,31 +24,23 @@ export class State {
     }
 
 
-    public async enter(): Promise<StateResult> {
-        return {
-            state: this,
-            reply: undefined
-        };
+    public async enter(): Promise<State> {
+        return this;
     }
 
-    public async text(message: Message): Promise<StateResult> {
-        return {
-            state: this,
-            reply: undefined
-        };
+    public async text(message: Message): Promise<State> {
+        return this;
     }
 
-    public async button(message: CallbackQuery): Promise<StateResult> {
-        return {
-            state: this,
-            reply: undefined
-        };
+    public async button(message: CallbackQuery): Promise<State> {
+        return this;
     }
 
-    public async noAction(): Promise<StateResult> {
-        return {
-            state: this,
-            reply: undefined
-        };
+    public async noAction(): Promise<State> {
+        return this;
+    }
+
+    public async message(data: Reply): Promise<Message | undefined> {
+        return await sendToChat(this.user.chatId, data);
     }
 }

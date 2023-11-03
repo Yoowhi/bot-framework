@@ -14,17 +14,13 @@ export class Conversation {
         this.state = state ? new state(user) : new StartState(user)
     }
 
-    public async inputText(message: Message): Promise<Reply | undefined> {
+    public async inputText(message: Message): Promise<void> {
         INFO("User sent message", {chatId: this.user.chatId, text: message.text});
-        const result = await this.state.text(message);
-        this.state = result.state;
-        return result.reply;
+        this.state = await this.state.text(message);
     }
 
-    public async inputButton(message: CallbackQuery): Promise<Reply | undefined> {
+    public async inputButton(message: CallbackQuery): Promise<void> {
         INFO("User pushed button", {chatId: this.user.chatId, text: message.data});
-        const result = await this.state.button(message);
-        this.state = result.state;
-        return result.reply;
+        this.state = await this.state.button(message);
     }
 }

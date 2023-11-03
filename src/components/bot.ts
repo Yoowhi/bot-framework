@@ -5,7 +5,7 @@ import { DEBUG, ERROR, INFO, WARN } from "./logger";
 import { Conversation } from "./conversation";
 import { User, initUser } from "../models/db/user";
 
-type CommandCallback = (user: User) => Reply | Promise<Reply> | void;
+type CommandCallback = (user: User) => Reply | Promise<void> | void;
 type Commands = { "/start": (typeof State) | CommandCallback, [key: string]: (typeof State) | CommandCallback };
 
 
@@ -33,7 +33,7 @@ export function initBot(commands: Commands, beforeCommand?: (user: User) => Prom
 }
 
 export async function sendToChat(chatId: number, reply: Reply | string) {
-    let options: SendMessageOptions = {parse_mode: "Markdown"};
+    let options: SendMessageOptions = {parse_mode: "Markdown", disable_web_page_preview: true};
     let text: string;
     if (instanceOfReply(reply)) {
         text = reply.text ?? "";
@@ -72,30 +72,15 @@ async function listen() {
             if (state) {
                 if (state.prototype instanceof State) {
                     const conversation = getConversation(user, true, state as typeof State);
-                    const reply = (await conversation.state.enter()).reply;
-                    if (reply) {
-                        await sendToChat(chatId, reply);
-                        return;
-                    }
-                } else if (typeof state === "function") {
-                    const result = (state as CommandCallback)(user);
-                    if (result instanceof Promise) {
-                        const reply = await result;
-                        await sendToChat(chatId, reply);
-                        return;
-                    } else if (instanceOfReply(result)) {
-                        await sendToChat(chatId, result);
-                        return;
-                    }
+                    return await conversation.state.enter();
+                } else {
+                    (state as CommandCallback)(user);
+                    return;
                 }
-                return;
             }
         }
         const conversation = getConversation(user);
-        const reply = await conversation.inputText(msg);
-        if (reply) {
-            await sendToChat(chatId, reply);
-        }
+        await conversation.inputText(msg);
     });
     bot.on("callback_query", async msg => {
         const chatId = msg.message?.chat.id;
@@ -109,11 +94,11 @@ async function listen() {
             return;
         }
         const conversation = getConversation(user);
-        const reply = await conversation.inputButton(msg);
-        if (reply) {
-            await sendToChat(chatId, reply);
-        }
+        await conversation.inputButton(msg);
     })
+    bot.on("polling_error", (error) => {
+        ERROR("Polling error", error);
+    });
     INFO("Telegram callback initialized");
     INFO("Service ready");
 }

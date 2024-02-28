@@ -2,8 +2,9 @@ import TelegramBot, { BotCommand, SendMessageOptions } from "node-telegram-bot-a
 import config from "../config.json";
 import { Reply, State } from "./state";
 import { DEBUG, ERROR, INFO, WARN } from "./logger";
-import { Conversation } from "./conversation";
-import { User, initUser } from "../models/db/user";
+import { Chat } from "./chat";
+import { initUser } from "../models/db/user";
+import { User } from "@prisma/client";
 
 type CommandCallback = (user: User) => Reply | Promise<void> | void;
 type Commands = { "/start": (typeof State) | CommandCallback, [key: string]: (typeof State) | CommandCallback };
@@ -11,7 +12,7 @@ type Commands = { "/start": (typeof State) | CommandCallback, [key: string]: (ty
 
 let bot: TelegramBot;
 let commandMap: Map<keyof Commands, (typeof State) | CommandCallback>
-let conversations: Map<string, Conversation>;
+let conversations: Map<string, Chat>;
 let before: (user: User) => Promise<boolean> = async (user: User) => true;
 
 
@@ -19,7 +20,7 @@ let before: (user: User) => Promise<boolean> = async (user: User) => true;
 export function initBot(commands: Commands, beforeCommand?: (user: User) => Promise<boolean>) {
     bot = new TelegramBot(config.bot.token, {polling: true});
     commandMap = new Map<keyof Commands, typeof State>();
-    conversations = new Map<string, Conversation>();
+    conversations = new Map<string, Chat>();
     const commsList: BotCommand[] = [];
     for (const command in commands) {
         if (Object.prototype.hasOwnProperty.call(commands, command)) {
@@ -107,7 +108,7 @@ function getConversation(user: User, reset: boolean = false, stateClass?: typeof
     const key = `${user.chatId},${user.userId}`;
     let conversation = conversations.get(key);
     if (!conversation || reset) {
-        conversation = new Conversation(user);
+        conversation = new Chat(user);
         conversations.set(key, conversation);
     }
     return conversation;

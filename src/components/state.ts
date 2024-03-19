@@ -3,7 +3,7 @@ import { sendToChat } from "./bot";
 import prisma from "./prisma";
 import { User } from "@prisma/client";
 
-interface Button {
+export interface Button {
     text: string,
     callback_data: string
 }
@@ -13,8 +13,8 @@ export interface Reply {
     buttons?: ButtonRows
 }
 
-type ButtonRow = Button[];
-type ButtonRows = ButtonRow[];
+export type ButtonRow = Button[];
+export type ButtonRows = ButtonRow[];
 
 
 
@@ -22,8 +22,8 @@ export class State {
     public userId: string;
     public chatId: string;
 
-    constructor(user: string, chatId: string) {
-        this.userId = user;
+    constructor(userId: string, chatId: string) {
+        this.userId = userId;
         this.chatId = chatId;
     }
 

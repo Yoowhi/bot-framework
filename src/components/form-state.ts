@@ -57,9 +57,10 @@ export abstract class FormState<T> extends State {
 
     private async continue(): Promise<State> {
         if (this.currentStep + 1 >= this.steps.length) {
-            const {reply, state} = await this.summarize(this.form as Stringed<T>);
+            const {reply, state: StateClass} = await this.summarize(this.form as Stringed<T>);
             await this.message(reply);
-            return new state(this.userId, this.chatId);
+            const state = new StateClass(this.userId, this.chatId);
+            return state.enter();
         }
         this.currentStep++;
         await this.message({

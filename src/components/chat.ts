@@ -21,7 +21,7 @@ export class Chat {
 
     public async enter(userId: string, state: typeof State, args?: string[]) {
         const dialog = this.getDialog(userId, state);
-        this.dialogs[userId] = await dialog.enter();
+        this.dialogs[userId] = await dialog.enter(args);
     }
 
     public async inputButton(userId: string, message: CallbackQuery): Promise<void> {

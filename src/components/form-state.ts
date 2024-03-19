@@ -12,7 +12,7 @@ type Stringed<T> = {[K in keyof T]: string};
 
 export abstract class FormState<T> extends State {
     protected abstract steps: Step<T>[];
-    protected abstract summarize(form: Stringed<T>): Promise<{reply: Reply, state: typeof State}>;
+    protected abstract summarize(form: Stringed<T>): Promise<{reply: Reply, StateClass: typeof State}>;
     
     private form: Partial<Stringed<T>>;
     private currentStep: number;
@@ -57,7 +57,7 @@ export abstract class FormState<T> extends State {
 
     private async continue(): Promise<State> {
         if (this.currentStep + 1 >= this.steps.length) {
-            const {reply, state: StateClass} = await this.summarize(this.form as Stringed<T>);
+            const {reply, StateClass} = await this.summarize(this.form as Stringed<T>);
             await this.message(reply);
             const state = new StateClass(this.userId, this.chatId);
             return state.enter();

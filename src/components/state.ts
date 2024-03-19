@@ -1,6 +1,7 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
-import { User } from "../models/db/user";
 import { sendToChat } from "./bot";
+import prisma from "./prisma";
+import { User } from "@prisma/client";
 
 interface Button {
     text: string,
@@ -9,22 +10,25 @@ interface Button {
 
 export interface Reply {
     text?: string;
-    buttons?: ButtonColumn[]
+    buttons?: ButtonRows
 }
 
-type ButtonColumn = Button[];
+type ButtonRow = Button[];
+type ButtonRows = ButtonRow[];
 
 
 
 export class State {
-    public user: User;
+    public userId: string;
+    public chatId: string;
 
-    constructor(user: User) {
-        this.user = user;
+    constructor(user: string, chatId: string) {
+        this.userId = user;
+        this.chatId = chatId;
     }
 
 
-    public async enter(): Promise<State> {
+    public async enter(args?: string[]): Promise<State> {
         return this;
     }
 
@@ -40,7 +44,23 @@ export class State {
         return this;
     }
 
-    public async message(data: Reply): Promise<Message | undefined> {
-        return await sendToChat(this.user.chatId, data);
+    public async message(data: Reply | string): Promise<Message | undefined> {
+        return await sendToChat(this.chatId, data);
+    }
+
+    protected async getUser(): Promise<User> {
+        let user = await prisma.user.findFirst({
+            where: {
+                userId: this.userId
+            }
+        });
+        if (!user) {
+            user = await prisma.user.create({
+                data: {
+                    userId: this.userId,
+                }
+            });
+        }
+        return user;
     }
 }

@@ -3,24 +3,23 @@ import config from "../config.json";
 import { Reply, State } from "./state";
 import { DEBUG, ERROR, INFO, WARN } from "./logger";
 import { Chat } from "./chat";
-import { initUser } from "../models/db/user";
 import { User } from "@prisma/client";
 
-type CommandCallback = (user: User) => Reply | Promise<void> | void;
+type CommandCallback = (chatId: string, userId: string) => Reply | Promise<void> | void;
 type Commands = { "/start": (typeof State) | CommandCallback, [key: string]: (typeof State) | CommandCallback };
 
 
 let bot: TelegramBot;
 let commandMap: Map<keyof Commands, (typeof State) | CommandCallback>
-let conversations: Map<string, Chat>;
-let before: (user: User) => Promise<boolean> = async (user: User) => true;
+let chats: Map<string, Chat>;
+let before: (chatId: string, userId: string) => Promise<typeof State | undefined> = async (chatId: string, userId: string) => undefined;
 
 
 
 export function initBot(commands: Commands, beforeCommand?: (user: User) => Promise<boolean>) {
     bot = new TelegramBot(config.bot.token, {polling: true});
     commandMap = new Map<keyof Commands, typeof State>();
-    conversations = new Map<string, Chat>();
+    chats = new Map<string, Chat>();
     const commsList: BotCommand[] = [];
     for (const command in commands) {
         if (Object.prototype.hasOwnProperty.call(commands, command)) {
@@ -29,12 +28,12 @@ export function initBot(commands: Commands, beforeCommand?: (user: User) => Prom
             commandMap.set(command, stateClass);
         }
     }
-    //bot.setMyCommands(commsList);
+    bot.setMyCommands(commsList);
     listen();
 }
 
-export async function sendToChat(chatId: number, reply: Reply | string) {
-    let options: SendMessageOptions = {parse_mode: "Markdown", disable_web_page_preview: true};
+export async function sendToChat(chatId: string, reply: Reply | string) {
+    let options: SendMessageOptions = {parse_mode: "HTML", disable_web_page_preview: true};
     let text: string;
     if (instanceOfReply(reply)) {
         text = reply.text ?? "";
@@ -53,18 +52,28 @@ export async function sendToChat(chatId: number, reply: Reply | string) {
     }
 }
 
+export async function answerCallbackQuery(callbackQueryId: string) {
+    try {
+        return await bot.answerCallbackQuery({callback_query_id: callbackQueryId});
+    } catch (error) {
+        ERROR("Callback query error", {error});
+    }
+}
+
 async function listen() {
     INFO("Telegram callback initializing...");
     bot.on("text", async msg => {
         DEBUG("New message from " + msg.from?.id)
-        const chatId = msg.chat.id;
-        const userId = msg.from?.id;
+        const chatId = msg.chat.id.toString();
+        const userId = msg.from?.id.toString();
         if (!userId) {
             WARN("userId is not available", {chatId: msg.chat.id, text: msg.text});
             return;
         }
-        const user = await initUser(chatId, userId);
-        if (!(await before(user))) {
+        const chat = getChat(chatId);
+        const fallbackState = await before(chatId, userId);
+        if (fallbackState) {
+            await chat.enter(userId, fallbackState);
             return;
         }
         if (msg.text && msg.text[0] === "/") {
@@ -72,30 +81,30 @@ async function listen() {
             const state = commandMap.get(command);
             if (state) {
                 if (state.prototype instanceof State) {
-                    const conversation = getConversation(user, true, state as typeof State);
-                    return await conversation.state.enter();
+                    await chat.enter(userId, state as typeof State, args.length > 0 ? args : undefined);
+                    return;
                 } else {
-                    (state as CommandCallback)(user);
+                    (state as CommandCallback)(chatId, userId);
                     return;
                 }
             }
         }
-        const conversation = getConversation(user);
-        await conversation.inputText(msg);
+        await chat.inputText(userId, msg);
     });
     bot.on("callback_query", async msg => {
-        const chatId = msg.message?.chat.id;
-        const userId = msg.from?.id;
+        const chatId = msg.message?.chat.id.toString();
+        const userId = msg.from?.id.toString();
         if (!chatId || !userId) {
             WARN("BUTTON: userId or chatId is not available", {chatId, userId, button: msg.data});
             return;
         }
-        const user = await initUser(chatId, userId);
-        if (!(await before(user))) {
+        const chat = getChat(chatId);
+        const fallbackState = await before(chatId, userId);
+        if (fallbackState) {
+            await chat.enter(userId, fallbackState);
             return;
         }
-        const conversation = getConversation(user);
-        await conversation.inputButton(msg);
+        await chat.inputButton(userId, msg);
     })
     bot.on("polling_error", (error) => {
         ERROR("Polling error", error);
@@ -104,14 +113,13 @@ async function listen() {
     INFO("Service ready");
 }
 
-function getConversation(user: User, reset: boolean = false, stateClass?: typeof State) {
-    const key = `${user.chatId},${user.userId}`;
-    let conversation = conversations.get(key);
-    if (!conversation || reset) {
-        conversation = new Chat(user);
-        conversations.set(key, conversation);
+function getChat(chatId: string) {
+    let chat = chats.get(chatId);
+    if (!chat) {
+        chat = new Chat(chatId);
+        chats.set(chatId, chat);
     }
-    return conversation;
+    return chat;
 }
 
 function instanceOfReply(obj: any): obj is Reply {

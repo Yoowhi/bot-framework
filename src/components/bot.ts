@@ -123,5 +123,8 @@ function getChat(chatId: string) {
 }
 
 function instanceOfReply(obj: any): obj is Reply {
+    if (typeof obj !== "object") {
+        return false;
+    }
     return "text" in obj || "buttons" in obj;
 }

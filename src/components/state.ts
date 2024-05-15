@@ -2,6 +2,7 @@ import { CallbackQuery, Message } from "node-telegram-bot-api";
 import { DialogID, MessageOptions, sendToChat } from "./bot";
 import prisma from "./prisma";
 import { User } from "@prisma/client";
+import { WARN } from "./logger";
 
 export interface Button {
     text: string,
@@ -28,6 +29,7 @@ export class State {
                 }
             });
             if (!user) {
+                WARN("User was not created before state init!", this.dialog);
                 user = await prisma.user.create({
                     data: {
                         userId: this.dialog.userId,

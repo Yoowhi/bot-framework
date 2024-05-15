@@ -34,7 +34,11 @@ export class Chat {
     private getDialog(userId: string, state?: typeof State) {
         let dialog = this.dialogs[userId];
         if (!dialog || state) {
-            dialog = state? new state(userId, this.chatId) : new StartState(userId, this.chatId);
+            const dialogId = {
+                userId: userId,
+                chatId: this.chatId
+            }
+            dialog = state? new state(dialogId) : new StartState(dialogId);
             this.dialogs[userId] = dialog;
         }
         return dialog;

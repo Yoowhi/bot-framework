@@ -5,7 +5,7 @@ import { INFO } from "../../components/logger";
 export class StartState extends State {
 
     public async enter() {
-        INFO("User entered StartState", this.userId);
+        INFO("User entered StartState", this.dialog.userId);
         await this.message({
             text: t("example")
         })

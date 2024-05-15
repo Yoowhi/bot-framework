@@ -12,6 +12,10 @@ export type MessageOptions = {
     photoPath?: string,
     markup?: ParseMode
 }
+export type DialogID= {
+    userId: string,
+    chatId: string
+}
 
 
 let bot: TelegramBot;

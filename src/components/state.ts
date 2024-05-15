@@ -1,5 +1,5 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
-import { MessageOptions, sendToChat } from "./bot";
+import { DialogID, MessageOptions, sendToChat } from "./bot";
 import prisma from "./prisma";
 import { User } from "@prisma/client";
 
@@ -19,12 +19,28 @@ export type ButtonRows = ButtonRow[];
 
 
 export class State {
-    public userId: string;
-    public chatId: string;
+    public dialog: DialogID;
+    protected get user() : Promise<User> {
+        return (async () => {
+            let user = await prisma.user.findFirst({
+                where: {
+                    userId: this.dialog.userId
+                }
+            });
+            if (!user) {
+                user = await prisma.user.create({
+                    data: {
+                        userId: this.dialog.userId,
+                    }
+                });
+            }
+            return user;
+        })();
+    }
+    
 
-    constructor(userId: string, chatId: string) {
-        this.userId = userId;
-        this.chatId = chatId;
+    constructor(dialog: DialogID) {
+        this.dialog = dialog;
     }
 
 
@@ -44,23 +60,7 @@ export class State {
         return this;
     }
 
-    public async message(data: Reply | string, options: MessageOptions): Promise<Message | undefined> {
-        return await sendToChat(this.chatId, data, options);
-    }
-
-    protected async getUser(): Promise<User> {
-        let user = await prisma.user.findFirst({
-            where: {
-                userId: this.userId
-            }
-        });
-        if (!user) {
-            user = await prisma.user.create({
-                data: {
-                    userId: this.userId,
-                }
-            });
-        }
-        return user;
+    public async message(data: Reply | string, options?: MessageOptions): Promise<Message | undefined> {
+        return await sendToChat(this.dialog.chatId, data, options);
     }
 }

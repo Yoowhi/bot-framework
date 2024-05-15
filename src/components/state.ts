@@ -1,5 +1,5 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
-import { sendToChat } from "./bot";
+import { MessageOptions, sendToChat } from "./bot";
 import prisma from "./prisma";
 import { User } from "@prisma/client";
 
@@ -44,8 +44,8 @@ export class State {
         return this;
     }
 
-    public async message(data: Reply | string): Promise<Message | undefined> {
-        return await sendToChat(this.chatId, data);
+    public async message(data: Reply | string, options: MessageOptions): Promise<Message | undefined> {
+        return await sendToChat(this.chatId, data, options);
     }
 
     protected async getUser(): Promise<User> {

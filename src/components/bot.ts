@@ -6,8 +6,8 @@ import { Chat } from "./chat";
 import { User } from "@prisma/client";
 import { read } from "./images";
 
-type CommandCallback = (chatId: string, userId: string) => Reply | Promise<void> | void;
-type Commands = { "/start": (typeof State) | CommandCallback, [key: string]: (typeof State) | CommandCallback };
+type Command = {stateClass: typeof State, description: string}
+type Commands = { "/start": Command, [key: string]: Command };
 export type MessageOptions = {
     photoPath?: string,
     markup?: ParseMode
@@ -15,7 +15,7 @@ export type MessageOptions = {
 
 
 let bot: TelegramBot;
-let commandMap: Map<keyof Commands, (typeof State) | CommandCallback>
+let commandMap: Map<keyof Commands, typeof State>
 let chats: Map<string, Chat>;
 let before: (chatId: string, userId: string) => Promise<typeof State | undefined> = async (chatId: string, userId: string) => undefined;
 
@@ -28,9 +28,9 @@ export function initBot(commands: Commands, beforeCommand?: (user: User) => Prom
     const commsList: BotCommand[] = [];
     for (const command in commands) {
         if (Object.prototype.hasOwnProperty.call(commands, command)) {
-            const stateClass = commands[command];
-            commsList.push({command, description: `command`});
-            commandMap.set(command, stateClass);
+            const commandInfo = commands[command];
+            commsList.push({command, description: commandInfo.description});
+            commandMap.set(command, commandInfo.stateClass);
         }
     }
     bot.setMyCommands(commsList);
@@ -106,13 +106,8 @@ async function listen() {
             const [command, ...args] = msg.text.split(" ");
             const state = commandMap.get(command);
             if (state) {
-                if (state.prototype instanceof State) {
-                    await chat.enter(userId, state as typeof State, args.length > 0 ? args : undefined);
-                    return;
-                } else {
-                    (state as CommandCallback)(chatId, userId);
-                    return;
-                }
+                await chat.enter(userId, state, args.length > 0 ? args : undefined);
+                return;
             }
         }
         await chat.inputText(userId, msg);

@@ -3,6 +3,7 @@ import { State } from "./state";
 import { StartState } from "../models/states/start-state";
 import { INFO } from "./logger";
 import { answerCallbackQuery } from "./bot";
+import { initUser } from "./prisma";
 
 export class Chat {
     private dialogs: {[key: string]: State}; // userId: state
@@ -33,6 +34,9 @@ export class Chat {
 
     private getDialog(userId: string, state?: typeof State) {
         let dialog = this.dialogs[userId];
+        if (!dialog) {
+            initUser(userId);
+        }
         if (!dialog || state) {
             const dialogId = {
                 userId: userId,

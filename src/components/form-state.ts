@@ -1,6 +1,7 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
 import { ButtonRows, Reply, State } from "./state";
 import { ERROR } from "./logger";
+import { DialogID } from "./bot";
 
 export type Step<T> = {
     text: string,
@@ -17,8 +18,8 @@ export abstract class FormState<T> extends State {
     private form: Partial<T>;
     private currentStep: number;
 
-    constructor(userId: string, chatId: string) {
-        super(userId, chatId);
+    constructor(dialog: DialogID) {
+        super(dialog);
         this.form = {};
         this.currentStep = 0;
     }
@@ -55,7 +56,7 @@ export abstract class FormState<T> extends State {
                         buttons: this.steps[this.currentStep].buttons
                     });
                 } else {
-                    ERROR("Error in form step", {user: this.userId, chat: this.chatId, field: field, value: message.text, error});
+                    ERROR("Error in form step", {user: this.dialog.userId, chat: this.dialog.chatId, field: field, value: message.text, error});
                 }
                 return this;
             }
@@ -84,7 +85,7 @@ export abstract class FormState<T> extends State {
                         buttons: this.steps[this.currentStep].buttons
                     });
                 } else {
-                    ERROR("Error in form step", {user: this.userId, chat: this.chatId, field: field, value: message.data, error});
+                    ERROR("Error in form step", {user: this.dialog.userId, chat: this.dialog.chatId, field: field, value: message.data, error});
                 }
                 return this;
             }

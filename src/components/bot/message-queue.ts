@@ -1,6 +1,5 @@
 import TelegramBot, { ParseMode, SendMessageOptions, SendPhotoOptions } from "node-telegram-bot-api";
 import { getBot } from "./bot";
-import { ButtonRows, Reply } from "../state";
 import { ERROR } from "../logger";
 import { read } from "../images";
 
@@ -14,6 +13,24 @@ type Message = {
     reply: Reply | string,
     options?: MessageOptions
 }
+
+export interface Button {
+    text: string,
+    callback_data: string
+}
+
+export interface URLButton {
+    text: string,
+    url: string
+}
+
+export interface Reply {
+    text?: string;
+    buttons?: ButtonRows
+}
+
+export type ButtonRow = Button[] | URLButton[];
+export type ButtonRows = ButtonRow[];
 
 const messageQueue: {msg: Message, resolve: (msg: TelegramBot.Message | undefined) => void}[] = [];
 

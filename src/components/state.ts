@@ -1,23 +1,9 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
-import { MessageOptions, sendToChat } from "./bot/message-queue";
+import { MessageOptions, Reply, sendToChat } from "./bot/message-queue";
 import prisma from "./prisma";
 import { User } from "@prisma/client";
 import { WARN } from "./logger";
 import { DialogID } from "./bot/bot";
-
-export interface Button {
-    text: string,
-    callback_data: string
-}
-
-export interface Reply {
-    text?: string;
-    buttons?: ButtonRows
-}
-
-export type ButtonRow = Button[];
-export type ButtonRows = ButtonRow[];
-
 
 
 export class State {

@@ -1,4 +1,4 @@
-import { initBot, sendToChat } from "./components/bot";
+import { initBot } from "./components/bot/bot";
 import { StartState } from "./models/states/start-state";
 
 initBot({

@@ -1,28 +1,26 @@
-import TelegramBot, { BotCommand, SendMessageOptions, SendPhotoOptions, ParseMode } from "node-telegram-bot-api";
-import config from "../config.json";
-import { ButtonRows, Reply, State } from "./state";
-import { DEBUG, ERROR, INFO, WARN } from "./logger";
-import { Chat } from "./chat";
+import TelegramBot, { BotCommand } from "node-telegram-bot-api";
+import config from "../../config.json";
+import { State } from "../state";
+import { DEBUG, ERROR, INFO, WARN } from "../logger";
+import { Chat } from "../chat";
 import { User } from "@prisma/client";
-import { read } from "./images";
 
 type Command = {stateClass: typeof State, description: string}
 type Commands = { "/start": Command, [key: string]: Command };
-export type MessageOptions = {
-    photoPath?: string,
-    markup?: ParseMode
-}
+
 export type DialogID= {
     userId: string,
     chatId: string
 }
-
 
 let bot: TelegramBot;
 let commandMap: Map<keyof Commands, typeof State>
 let chats: Map<string, Chat>;
 let before: (chatId: string, userId: string) => Promise<typeof State | undefined> = async (chatId: string, userId: string) => undefined;
 
+export function getBot() {
+    return bot;
+}
 
 
 export function initBot(commands: Commands, beforeCommand?: (user: User) => Promise<boolean>) {
@@ -39,47 +37,6 @@ export function initBot(commands: Commands, beforeCommand?: (user: User) => Prom
     }
     bot.setMyCommands(commsList);
     listen();
-}
-
-export async function sendToChat(chatId: string, reply: Reply | string, options?: MessageOptions) {
-    let text: string;
-    let buttons: ButtonRows | undefined;
-    if (instanceOfReply(reply)) {
-        text = reply.text ?? "";
-        if (reply.buttons) {
-            buttons = reply.buttons;
-        }
-    } else {
-        text = reply
-    }
-    try {
-        if (options?.photoPath) {
-            const sendOptions: SendPhotoOptions = {
-                caption: text,
-                parse_mode: options.markup ?? "HTML",
-            }
-            if (buttons) {
-                sendOptions.reply_markup = {
-                    inline_keyboard: buttons
-                }
-            }
-            const file = await read(options.photoPath);
-            return await bot.sendPhoto(chatId, file, sendOptions);
-        } else { 
-            const sendOptions: SendMessageOptions = {
-                parse_mode: options?.markup ?? "HTML", 
-                disable_web_page_preview: true
-            };
-            if (buttons) {
-                sendOptions.reply_markup = {
-                    inline_keyboard: buttons
-                }
-            }
-            return await bot.sendMessage(chatId, text, sendOptions);
-        }
-    } catch (error) {
-        ERROR("Message send error", {chatId, reply, error});
-    }
 }
 
 export async function answerCallbackQuery(callbackQueryId: string) {
@@ -145,11 +102,4 @@ function getChat(chatId: string) {
         chats.set(chatId, chat);
     }
     return chat;
-}
-
-function instanceOfReply(obj: any): obj is Reply {
-    if (typeof obj !== "object") {
-        return false;
-    }
-    return "text" in obj || "buttons" in obj;
 }

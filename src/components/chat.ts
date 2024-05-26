@@ -2,7 +2,7 @@ import { CallbackQuery, Message } from "node-telegram-bot-api";
 import { State } from "./state";
 import { StartState } from "../models/states/start-state";
 import { INFO } from "./logger";
-import { answerCallbackQuery } from "./bot";
+import { answerCallbackQuery } from "./bot/bot";
 import { initUser } from "./prisma";
 
 export class Chat {

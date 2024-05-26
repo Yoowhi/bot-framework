@@ -1,7 +1,7 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
 import { ButtonRows, Reply, State } from "./state";
 import { ERROR } from "./logger";
-import { DialogID } from "./bot";
+import { DialogID } from "./bot/bot";
 
 export type Step<T> = {
     text: string,

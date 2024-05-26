@@ -90,6 +90,7 @@ async function listen() {
     })
     bot.on("polling_error", (error) => {
         ERROR("Polling error", error);
+        process.exit(1);
     });
     INFO("Telegram callback initialized");
     INFO("Service ready");

@@ -1,10 +1,14 @@
 import "reflect-metadata";
 import { initBot } from "./components/bot/bot";
-import { StartState } from "./models/states/start-state";
+import { StartState } from "./states/start-state";
+import { initDB } from "./components/db";
 
-initBot({
-    "/start": {
-        stateClass: StartState,
-        description: "About"
-    },
-});
+(async () => {
+    await initDB();
+    initBot({
+        "/start": {
+            stateClass: StartState,
+            description: "About"
+        },
+    });
+})();

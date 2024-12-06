@@ -4,6 +4,8 @@ import { State } from "../state";
 import { DEBUG, ERROR, INFO, WARN } from "../logger";
 import { Chat } from "../chat";
 import { User } from "@prisma/client";
+import { UserEntity } from "../../entity/user.entity";
+import { ChatEntity } from "../../entity/chat.entity";
 
 type Command = {stateClass: typeof State, description: string};
 type Commands = { "/start": Command, [key: string]: Command };
@@ -39,6 +41,9 @@ export function initBot(commands: Commands, beforeCommand?: (user: User) => Prom
     listen();
 }
 
+/**
+ * @deprecated
+ */
 export async function answerCallbackQuery(callbackQueryId: string) {
     try {
         return await bot.answerCallbackQuery({callback_query_id: callbackQueryId});
@@ -57,6 +62,8 @@ async function listen() {
             WARN("userId is not available", {chatId: msg.chat.id, text: msg.text});
             return;
         }
+        UserEntity.updateOnMessage(userId, msg.from?.username);
+        ChatEntity.updateOnMessage(chatId);
         const chat = getChat(chatId);
         const fallbackState = await before(chatId, userId);
         if (fallbackState) {
@@ -80,6 +87,8 @@ async function listen() {
             WARN("BUTTON: userId or chatId is not available", {chatId, userId, button: msg.data});
             return;
         }
+        UserEntity.updateOnMessage(userId, msg.from.username);
+        ChatEntity.updateOnMessage(chatId);
         const chat = getChat(chatId);
         const fallbackState = await before(chatId, userId);
         if (fallbackState) {

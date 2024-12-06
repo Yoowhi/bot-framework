@@ -8,7 +8,10 @@
     "start": "node dist/app.js",
     "bs": "npm run build && npm run start",
     "dev": "ts-node-dev --respawn ./src/app.ts",
-    "test": "npm run build && node dist/tester.js"
+    "test": "npm run build && node dist/tester.js",
+	"migrate": "npx typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts",
+    "migrate:gen": "npx typeorm-ts-node-commonjs -d ./src/data-source.ts migration:generate ./src/migrations/",
+	"migrate:down": "npx typeorm-ts-node-commonjs migration:revert -d ./src/data-source.ts"
   },
   "author": "",
   "license": "ISC",

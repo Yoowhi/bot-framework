@@ -1,9 +1,8 @@
 import { CallbackQuery, Message } from "node-telegram-bot-api";
 import { State } from "./state";
-import { StartState } from "../models/states/start-state";
+import { StartState } from "../states/start-state";
 import { INFO } from "./logger";
 import { answerCallbackQuery } from "./bot/bot";
-import { initUser } from "./prisma";
 
 export class Chat {
     private dialogs: {[key: string]: State}; // userId: state
@@ -29,14 +28,11 @@ export class Chat {
         INFO("User pushed button", {chatId: this.chatId, text: message.data});
         const dialog = this.getDialog(userId);
         this.dialogs[userId] = await dialog.button(message);
-        await answerCallbackQuery(message.id);
+        //await answerCallbackQuery(message.id);
     }
 
     private getDialog(userId: string, state?: typeof State) {
         let dialog = this.dialogs[userId];
-        if (!dialog) {
-            initUser(userId);
-        }
         if (!dialog || state) {
             const dialogId = {
                 userId: userId,

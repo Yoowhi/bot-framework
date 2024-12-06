@@ -1,6 +1,6 @@
-import { State } from "../../components/state";
-import { t } from "../../components/text";
-import { INFO } from "../../components/logger";
+import { State } from "../components/state";
+import { t } from "../components/text";
+import { INFO } from "../components/logger";
 import { CallbackQuery, Message } from "node-telegram-bot-api";
 
 export class StartState extends State {

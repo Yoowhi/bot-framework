@@ -1,6 +1,6 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
-import { sendSOL, sendToken, solBalance, tokenBalance } from "./solana";
-import { Wallet } from "./wallet";
+import { sendSOL, sendToken, solBalance, tokenBalance } from "../components/crypto/solana";
+import { Wallet } from "../components/crypto/wallet";
 import { decode } from "bs58";
 
 export class SolanaWallet extends Wallet {

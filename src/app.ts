@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { initBot } from "./components/bot/bot";
 import { StartState } from "./models/states/start-state";
 

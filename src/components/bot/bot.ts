@@ -5,7 +5,7 @@ import { DEBUG, ERROR, INFO, WARN } from "../logger";
 import { Chat } from "../chat";
 import { User } from "@prisma/client";
 
-type Command = {stateClass: typeof State, description: string}
+type Command = {stateClass: typeof State, description: string};
 type Commands = { "/start": Command, [key: string]: Command };
 
 export type DialogID= {

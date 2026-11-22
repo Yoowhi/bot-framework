@@ -3,6 +3,15 @@ const LVL_WARNING = 1;
 const LVL_INFO = 2;
 const LVL_DEBUG = 3;
 
+export function getLogger(name: string) {
+    return {
+        ERROR: (text: string, obj?: any) => ERROR(`[${name}]: ${text}`, obj),
+        WARN: (text: string, obj?: any) => ERROR(`[${name}]: ${text}`, obj),
+        INFO: (text: string, obj?: any) => ERROR(`[${name}]: ${text}`, obj),
+        DEBUG: (text: string, obj?: any) => ERROR(`[${name}]: ${text}`, obj),
+    };
+}
+
 export function ERROR(text: string, obj?: any) {
     const date = new Date();
     const dt = date.toLocaleDateString() + " " + date.toLocaleTimeString() + "." + date.getMilliseconds();

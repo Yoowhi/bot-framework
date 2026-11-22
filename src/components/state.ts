@@ -31,6 +31,10 @@ export class State {
             return chat;
         })();
     }
+
+    protected next<T extends State>(stateClass: new (dialog: any, ...args: any[]) => T, ...args: any[]): T {
+        return new stateClass(this.dialog, ...args);
+    }
     
 
     constructor(dialog: DialogID) {

@@ -1,17 +1,11 @@
 import TelegramBot, { ParseMode, SendMessageOptions, SendPhotoOptions } from "node-telegram-bot-api";
 import { getBot } from "./bot";
 import { ERROR } from "../logger";
-import { read } from "../images";
+import { FileEntity } from "../../entity/file.entity";
 
 export type MessageOptions = {
     photoPath?: string,
     markup?: ParseMode
-}
-
-type Message = {
-    chatId: string,
-    reply: Reply | string,
-    options?: MessageOptions
 }
 
 export interface Button {
@@ -32,27 +26,22 @@ export interface Reply {
 export type ButtonRow = Button[] | URLButton[];
 export type ButtonRows = ButtonRow[];
 
-const messageQueue: {msg: Message, resolve: (msg: TelegramBot.Message | undefined) => void}[] = [];
+const messageQueue: (() => void)[] = [];
 
 setInterval(async () => {
     let count = 0;
     while (messageQueue.length > 0 && count < 15) {
-        let {msg, resolve} = messageQueue.shift()!;
+        const action = messageQueue.shift()!;
         count++;
-        const result = await send(msg.chatId, msg.reply, msg.options);
-        resolve(result);
+        action();
     }
 }, 500);
 
 export async function sendToChat(chatId: string, reply: Reply | string, options?: MessageOptions) {
     const promise = new Promise<TelegramBot.Message | undefined>((resolve, reject) => {
-        messageQueue.push({
-            msg: {
-                chatId,
-                reply,
-                options
-            },
-            resolve
+        messageQueue.push(() => {
+            const result = send(chatId, reply, options);
+            resolve(result);
         });
     })
     return promise;
@@ -81,7 +70,9 @@ async function send(chatId: string, reply: Reply | string, options?: MessageOpti
                     inline_keyboard: buttons
                 }
             }
-            const file = await read(options.photoPath);
+            const file = await FileEntity.getByPath(options.photoPath);
+            const res = await bot.sendPhoto(chatId, file, sendOptions);
+            res.media_group_id
             return await bot.sendPhoto(chatId, file, sendOptions);
         } else { 
             const sendOptions: SendMessageOptions = {

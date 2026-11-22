@@ -1,6 +1,7 @@
 {
     "bot": {
-        "token": "***"
+        "token": "***",
+        "mediaGroupHandlerTimeout": 2000
     },
     "db": {
         "host": "localhost",
